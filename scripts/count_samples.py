@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 DEFAULT_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "lingSpam.csv"
-LABEL_NAMES = {0: "ham", 1: "spam"}
+LABEL_NAMES = {0: "mẫu 0 (ham)", 1: " mẫu 1 (spam)"}
 
 
 def count_samples(csv_path: Path) -> pd.DataFrame:

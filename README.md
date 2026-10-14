@@ -58,7 +58,9 @@ ling-spam-hands-on/
 ├── notebooks/ling-spam-dataset-eda/   # notebook EDA gốc từ Kaggle + kernel-metadata.json
 ├── scripts/
 │   ├── download_data.sh               # tải lại notebook + dataset từ Kaggle
-│   └── count_samples.py               # đếm số mẫu tổng và theo nhãn
+│   ├── count_samples.py               # đếm số mẫu tổng và theo nhãn
+│   ├── tfidf_features.py              # chuyển văn bản -> ma trận TF-IDF
+│   └── train_models.py                # train + đánh giá mô hình phân loại
 ├── requirements.txt
 └── README.md
 ```
@@ -116,7 +118,25 @@ label  count  percent
 
 Chưa kích hoạt venv thì gọi trực tiếp: `.venv/bin/python scripts/count_samples.py`.
 
-### 5.2. Chạy notebook EDA
+### 5.2. Chuyển văn bản sang TF-IDF và train mô hình
+
+```bash
+python scripts/tfidf_features.py --save   # bỏ trùng, chia train/test 80/20 (stratified), fit TF-IDF trên train
+python scripts/train_models.py            # train MultinomialNB, LogisticRegression, LinearSVC và đánh giá
+```
+
+`tfidf_features.py` lưu ma trận sparse + vectorizer vào `data/processed/` (không commit, chạy lại là có).
+Tuỳ chọn: `--max-features` (mặc định 5000), `--test-size` (0.2), `--top-k` (15).
+
+Kết quả trên tập test (519 email: 434 ham, 85 spam):
+
+| Mô hình | Accuracy | Precision (spam) | Recall (spam) | F1 (spam) |
+|---|---|---|---|---|
+| MultinomialNB | 0.9942 | 0.9881 | 0.9765 | 0.9822 |
+| LogisticRegression | 0.9942 | 0.9881 | 0.9765 | 0.9822 |
+| LinearSVC | 0.9923 | 1.0000 | 0.9529 | 0.9759 |
+
+### 5.3. Chạy notebook EDA
 
 ```bash
 jupyter lab
@@ -141,7 +161,7 @@ Notebook gồm các bước:
 4. Word cloud toàn bộ dữ liệu và riêng từng lớp
 5. Phân phối số từ mỗi email theo nhãn (histogram + `describe()`)
 
-### 5.3. Chạy trong VS Code
+### 5.4. Chạy trong VS Code
 
 1. `Cmd+Shift+P` → **Python: Select Interpreter** → chọn `./.venv/bin/python`.
 2. Mở file `.py` → bấm ▶ **Run Python File**, hoặc mở `.ipynb` và chọn kernel `.venv`.
@@ -162,6 +182,6 @@ Notebook hiện tại mới dừng ở EDA. Hướng xây mô hình gợi ý:
 | Lỗi | Nguyên nhân / cách sửa |
 |---|---|
 | `ModuleNotFoundError: No module named 'pandas'` | Đang dùng Python hệ thống. Kích hoạt `.venv` hoặc chọn đúng interpreter. |
-| `FileNotFoundError: /kaggle/input/...` | Chưa sửa đường dẫn trong notebook — xem mục 5.2. |
+| `FileNotFoundError: /kaggle/input/...` | Chưa sửa đường dẫn trong notebook — xem mục 5.3. |
 | `ERROR: no Kaggle credentials found` | Chưa cấu hình token — xem mục 4.1. |
 | `401 Unauthorized` khi tải từ Kaggle | Token sai / đã bị thu hồi. Tạo token mới. |

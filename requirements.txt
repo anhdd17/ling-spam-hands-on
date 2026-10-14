@@ -6,3 +6,4 @@ wordcloud
 ipython
 jupyter
 kaggle
+scikit-learn
