@@ -59,8 +59,7 @@ ling-spam-hands-on/
 ├── scripts/
 │   ├── download_data.sh               # tải lại notebook + dataset từ Kaggle
 │   ├── count_samples.py               # đếm số mẫu tổng và theo nhãn
-│   ├── tfidf_features.py              # chuyển văn bản -> ma trận TF-IDF
-│   └── train_models.py                # train + đánh giá mô hình phân loại
+│   └── tfidf_features.py              # chuyển văn bản -> ma trận TF-IDF
 ├── requirements.txt
 └── README.md
 ```
@@ -118,23 +117,33 @@ label  count  percent
 
 Chưa kích hoạt venv thì gọi trực tiếp: `.venv/bin/python scripts/count_samples.py`.
 
-### 5.2. Chuyển văn bản sang TF-IDF và train mô hình
+### 5.2. Chuyển dữ liệu sang dạng số bằng TF-IDF
 
 ```bash
-python scripts/tfidf_features.py --save   # bỏ trùng, chia train/test 80/20 (stratified), fit TF-IDF trên train
-python scripts/train_models.py            # train MultinomialNB, LogisticRegression, LinearSVC và đánh giá
+python scripts/tfidf_features.py          # chỉ in kết quả
+python scripts/tfidf_features.py --save   # lưu ma trận vào data/processed/
 ```
 
-`tfidf_features.py` lưu ma trận sparse + vectorizer vào `data/processed/` (không commit, chạy lại là có).
+Các bước script thực hiện:
+
+1. Bỏ 14 email trùng nội dung (2605 -> 2591 mẫu).
+2. Chia train/test 80/20, `stratify` theo nhãn để giữ tỉ lệ ham/spam.
+3. `TfidfVectorizer`: lowercase, bỏ stopword tiếng Anh, chỉ giữ từ chữ cái, 5000 từ phổ biến nhất.
+4. `fit_transform` trên train, chỉ `transform` trên test (tránh data leakage).
+
 Tuỳ chọn: `--max-features` (mặc định 5000), `--test-size` (0.2), `--top-k` (15).
+Với `--save`, ma trận sparse + nhãn + vectorizer được lưu vào `data/processed/` (không commit, chạy lại là có).
 
-Kết quả trên tập test (519 email: 434 ham, 85 spam):
+Kết quả:
 
-| Mô hình | Accuracy | Precision (spam) | Recall (spam) | F1 (spam) |
-|---|---|---|---|---|
-| MultinomialNB | 0.9942 | 0.9881 | 0.9765 | 0.9822 |
-| LogisticRegression | 0.9942 | 0.9881 | 0.9765 | 0.9822 |
-| LinearSVC | 0.9923 | 1.0000 | 0.9529 | 0.9759 |
+| | Kích thước | ham / spam |
+|---|---|---|
+| `X_train` | 2072 × 5000 | 1734 / 338 |
+| `X_test` | 519 × 5000 | 434 / 85 |
+
+- Chỉ 2.41% ô khác 0 -> lưu dạng ma trận sparse.
+- Từ TF-IDF trung bình cao nhất cho **ham**: language, university, linguistics, conference, english, papers, workshop, research...
+- Từ TF-IDF trung bình cao nhất cho **spam**: free, money, com, http, click, email, report, business, order, internet...
 
 ### 5.3. Chạy notebook EDA
 
